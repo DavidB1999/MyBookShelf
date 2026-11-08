@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mein Bücherregal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,500;0,700;1,500&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F3EF; --surface:#FFFFFF; --ink:#1F2A30; --muted:#5E6A70; --line:#D9DCD5;
+  --shelf:#9A7B5B; --owned:#2F5D50;
+  --p1:#8A5A00; --p1-bg:#FBEAC2;
+  --p2:#97506A; --p2-bg:#F7EBEF;
+  --p3:#7C7290; --p3-bg:#F2F0F5;
+  --p4:#A0978A; --p4-bg:#F7F5F1;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#171C1F; --surface:#20272B; --ink:#E7EAE6; --muted:#9AA5A9; --line:#333C40;
+    --shelf:#6E5A45; --owned:#7FB8A6;
+    --p1:#E8BA4E; --p1-bg:#352A10; --p2:#CC8DA1; --p2-bg:#2B2226; --p3:#A59EB3; --p3-bg:#252329; --p4:#8F887D; --p4-bg:#222120;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#171C1F; --surface:#20272B; --ink:#E7EAE6; --muted:#9AA5A9; --line:#333C40;
+  --shelf:#6E5A45; --owned:#7FB8A6;
+  --p1:#E8BA4E; --p1-bg:#352A10; --p2:#CC8DA1; --p2-bg:#2B2226; --p3:#A59EB3; --p3-bg:#252329; --p4:#8F887D; --p4-bg:#222120;
+  color-scheme: dark;
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 12px); scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0; background:var(--paper); color:var(--ink); font-family:"Alegreya Sans","Segoe UI",system-ui,sans-serif; font-size:17px; line-height:1.5}
+.wrap{max-width:780px; margin:0 auto; padding:2.5rem 1.25rem 4rem}
+h1,h2,h3.group{font-family:"Alegreya",Georgia,"Times New Roman",serif}
+header h1{font-weight:700; font-size:clamp(2.1rem,7vw,3rem); line-height:1.05; margin:0 0 .6rem}
+header p{margin:0 0 1rem; color:var(--muted); max-width:36em}
+.legend{display:flex; flex-wrap:wrap; gap:.5rem 1.2rem; font-size:.92rem; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:.4rem}
+.key{width:11px; height:20px; border-radius:2px; display:inline-block}
+.key.own{background:var(--owned)}
+.key.p1{border:2px dashed var(--p1); background:var(--p1-bg)}
+.key.p2{border:2px dashed var(--p2); background:var(--p2-bg)}
+.key.p3{border:2px dashed var(--p3); background:var(--p3-bg)}
+.key.p4{border:2px dotted var(--p4); background:var(--p4-bg)}
+
+/* Überblick */
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:1.1rem 1.1rem 1rem; margin-top:1rem}
+.panel h3{font-family:"Alegreya",Georgia,serif; font-size:1.35rem; margin:0 0 .2rem}
+.panel .sub{margin:0 0 .9rem; color:var(--muted); font-size:.95rem}
+.stats{display:grid; grid-template-columns:repeat(5,1fr); gap:.5rem}
+.stat{border-radius:4px; padding:.55rem .6rem; background:var(--paper)}
+.stat b{display:block; font-family:"Alegreya",Georgia,serif; font-size:1.6rem; line-height:1.1}
+.stat span{font-size:.85rem; color:var(--muted)}
+.stat.p1 b{color:var(--p1)} .stat.p2 b{color:var(--p2)} .stat.p3 b{color:var(--p3)} .stat.p4 b{color:var(--p4)} .stat.own b{color:var(--owned)}
+@media (max-width:520px){ .stats{grid-template-columns:repeat(3,1fr)} }
+
+.top{list-style:none; margin:0; padding:0}
+.top li{display:flex; justify-content:space-between; gap:1rem; padding:.45rem 0; border-bottom:1px solid var(--line)}
+.top li:last-child{border-bottom:0}
+.top .tt{font-weight:500}
+.top .meta{color:var(--muted); font-size:.9rem; text-align:right; flex-shrink:0; max-width:45%}
+
+.prog{display:grid; gap:.55rem}
+.prow{display:grid; grid-template-columns:minmax(0,10.5rem) 1fr auto; gap:.7rem; align-items:center; text-decoration:none; color:inherit; padding:.15rem 0; border-radius:3px}
+.prow:hover .pname{text-decoration:underline}
+.prow:focus-visible{outline:3px solid var(--p1); outline-offset:3px}
+.pname{font-size:.95rem; line-height:1.2}
+.pname small{display:block; color:var(--muted); font-size:.8rem}
+.track{display:flex; gap:2px; flex-wrap:wrap}
+.blk{width:12px; height:20px; border-radius:2px; background:var(--owned)}
+.blk.m1{background:var(--p1-bg); border:2px dashed var(--p1)}
+.blk.m2{background:var(--p2-bg); border:2px dashed var(--p2)}
+.blk.m3{background:var(--p3-bg); border:2px dashed var(--p3)}
+.blk.m4{background:var(--p4-bg); border:2px dotted var(--p4)}
+.pcount{font-size:.88rem; color:var(--muted); white-space:nowrap}
+.complete{margin:.9rem 0 0; font-size:.92rem; color:var(--muted)}
+.complete b{color:var(--owned)}
+@media (max-width:520px){ .prow{grid-template-columns:1fr auto} .prow .track{grid-column:1 / -1; order:3} }
+
+/* Filter */
+.topnav{position:sticky; top:env(safe-area-inset-top,0px); z-index:6; background:var(--paper); margin:1.6rem -1.25rem 0; padding:.55rem 1.25rem; border-bottom:1px solid var(--line)}
+.tabs{display:flex; gap:.3rem; align-items:center; overflow-x:auto; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{white-space:nowrap; text-decoration:none; color:var(--muted); padding:.4rem .8rem; border-radius:999px; font-weight:500; font-size:.95rem}
+.tabs a:hover{color:var(--ink)}
+.tabs a.active{background:var(--ink); color:var(--paper)}
+.tabs a:focus-visible{outline:3px solid var(--p1); outline-offset:2px}
+.filter-toggle{margin-left:auto; position:relative; white-space:nowrap; font:inherit; font-size:.92rem; font-weight:500; cursor:pointer; padding:.38rem .85rem; border-radius:999px; border:1.5px solid var(--line); background:var(--surface); color:var(--ink)}
+.filter-toggle[aria-expanded="true"]{border-color:var(--ink)}
+.filter-toggle:focus-visible{outline:3px solid var(--p1); outline-offset:2px}
+.dot{position:absolute; top:2px; right:2px; width:9px; height:9px; border-radius:50%; background:var(--p1); border:2px solid var(--paper)}
+.searchrow{display:flex; gap:.5rem; margin-top:.55rem}
+.searchrow .search{flex:1; min-width:0}
+#filters{margin-top:.55rem}
+.hc{display:inline-block; min-width:1.3rem; margin-left:.35rem; padding:0 .35rem; border-radius:999px; background:var(--p1); color:var(--surface); font-size:.75rem; font-weight:700; text-align:center}
+.hc:empty{display:none}
+.part{display:none}
+.part.on{display:block}
+.results{margin-top:1.4rem}
+.reshead{padding:.7rem .9rem; border-radius:6px; background:var(--p1-bg); display:flex; flex-wrap:wrap; gap:.5rem 1rem; align-items:center; justify-content:space-between}
+.resgroup{margin-top:1.4rem}
+.resgroup h3{font-family:"Alegreya",Georgia,serif; font-size:1.3rem; margin:0 0 .4rem; padding-bottom:.3rem; border-bottom:3px solid var(--shelf)}
+.reslist{list-style:none; margin:0; padding:0}
+.ri{display:grid; grid-template-columns:auto 1fr auto; gap:.2rem .7rem; align-items:center; padding:.55rem 0; border-bottom:1px solid var(--line)}
+.ri .mk{width:9px; height:30px; border-radius:2px; grid-row:span 2; background:var(--owned)}
+.ri .mk.m1{background:var(--p1-bg); border:2px dashed var(--p1)}
+.ri .mk.m2{background:var(--p2-bg); border:2px dashed var(--p2)}
+.ri .mk.m3{background:var(--p3-bg); border:2px dashed var(--p3)}
+.ri .mk.m4{background:var(--p4-bg); border:2px dotted var(--p4)}
+.ri .mk.idea{background:transparent; border:2px dotted var(--line)}
+.ri .rt{font-weight:500; line-height:1.25}
+.ri .rmeta{grid-column:2; color:var(--muted); font-size:.88rem; line-height:1.3}
+.ri .tag{grid-row:1 / span 2; grid-column:3}
+.tag.own{background:var(--paper); color:var(--owned)}
+@keyframes flash{0%,100%{outline-color:transparent} 20%,60%{outline-color:var(--p1)}}
+button.spine.flash{outline:4px solid var(--p1); outline-offset:3px; animation:flash 1.2s ease-in-out 2}
+@media (prefers-reduced-motion: reduce){ button.spine.flash{animation:none} }
+.backbtn{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(1rem + env(safe-area-inset-bottom,0px)); z-index:20; font:inherit; font-weight:700; font-size:.95rem; cursor:pointer; padding:.65rem 1.2rem; border-radius:999px; border:0; background:var(--ink); color:var(--paper); box-shadow:0 6px 20px rgba(0,0,0,.25); white-space:nowrap}
+.backbtn:focus-visible{outline:3px solid var(--p1); outline-offset:3px}
+.tag.idea{background:var(--paper); color:var(--muted)}
+.reset{font:inherit; font-size:.9rem; font-weight:500; cursor:pointer; padding:.3rem .8rem; border-radius:999px; border:1.5px solid var(--ink); background:transparent; color:var(--ink)}
+.reset:focus-visible{outline:3px solid var(--p1); outline-offset:2px}
+
+.part{margin-top:3.2rem}
+.part.on{margin-top:2rem}
+.part-title{font-family:"Alegreya",Georgia,"Times New Roman",serif; font-weight:700; font-size:clamp(1.7rem,5.5vw,2.3rem); line-height:1.1; margin:0 0 .3rem}
+.part-title::before{content:""; display:block; height:8px; background:var(--shelf); border-radius:2px; margin-bottom:1rem; box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.part-sub{margin:0; color:var(--muted)}
+body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:10; background:var(--paper)}
+.search{width:100%; font:inherit; padding:.55rem .8rem; border:1.5px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink)}
+.search:focus-visible{outline:3px solid var(--p1); outline-offset:1px}
+.chips{display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.6rem}
+.chip{font:inherit; font-size:.9rem; font-weight:500; cursor:pointer; padding:.35rem .85rem; border-radius:999px; border:1.5px solid var(--line); background:var(--surface); color:var(--ink)}
+.chip[aria-pressed="true"]{border-color:var(--ink); background:var(--ink); color:var(--paper)}
+.chip.p1[aria-pressed="true"]{background:var(--p1); border-color:var(--p1); color:var(--surface)}
+.chip.p2[aria-pressed="true"]{background:var(--p2); border-color:var(--p2); color:var(--surface)}
+.chip.p3[aria-pressed="true"]{background:var(--p3); border-color:var(--p3); color:var(--surface)}
+.chip.p4[aria-pressed="true"]{background:var(--p4); border-color:var(--p4); color:var(--surface)}
+.chip:focus-visible{outline:3px solid var(--p1); outline-offset:2px}
+
+/* Autoren */
+h3.group{font-size:1.15rem; font-weight:500; font-style:italic; color:var(--muted); margin:2.2rem 0 0; padding-bottom:.3rem; border-bottom:1px solid var(--line)}
+.author{margin-top:2.2rem}
+.author h2{font-size:1.9rem; margin:0; line-height:1.1; font-weight:700}
+.author .genre{margin:.2rem 0 0; color:var(--muted); font-style:italic; font-family:"Alegreya",Georgia,serif}
+.series{margin-top:1.2rem; background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:1rem 1rem .9rem}
+.series-head{display:flex; justify-content:space-between; align-items:baseline; gap:1rem; flex-wrap:wrap}
+.series h4{font-size:1.08rem; font-weight:700; margin:0}
+.count{font-size:.9rem; color:var(--muted)}
+.count.done{color:var(--owned); font-weight:700}
+.note{margin:.25rem 0 0; font-size:.9rem; color:var(--muted)}
+.shelf-scroll{overflow-x:auto; margin-top:.9rem; padding-bottom:.25rem}
+.shelf{display:flex; align-items:flex-end; gap:3px; min-width:max-content; padding:0 4px; border-bottom:7px solid var(--shelf); border-radius:0 0 2px 2px}
+.spine{width:38px; border-radius:3px 3px 1px 1px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:7px 0 8px; color:#fff; box-shadow:inset 3px 0 0 rgba(255,255,255,.12), inset -3px 0 0 rgba(0,0,0,.18)}
+.spine .no{font-size:.7rem; font-weight:700; opacity:.85}
+.spine .t{writing-mode:vertical-rl; transform:rotate(180deg); font-family:"Alegreya",Georgia,serif; font-size:.8rem; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-height:calc(100% - 24px)}
+.spine.m1,.spine.m2,.spine.m3,.spine.m4{box-shadow:none; border:2px dashed}
+.spine.m1{background:var(--p1-bg); color:var(--p1); border-color:var(--p1)}
+.spine.m2{background:var(--p2-bg); color:var(--p2); border-color:var(--p2)}
+.spine.m3{background:var(--p3-bg); color:var(--p3); border-color:var(--p3)}
+.spine.m4{background:var(--p4-bg); color:var(--p4); border-color:var(--p4); border-style:dotted}
+.spine[class*=" m"] .t{font-style:italic}
+@media (max-width:480px){ .wrap{padding-top:1.75rem} .spine{width:34px} }
+
+.wishlist{margin:.9rem 0 0; padding:.6rem .85rem; background:var(--paper); border-radius:4px}
+.wishlist strong{font-size:.9rem; display:block; margin-bottom:.15rem}
+.wishlist ul{margin:0; padding:0; list-style:none}
+.wishlist li{display:flex; justify-content:space-between; gap:.8rem; padding:.18rem 0; font-size:.97rem}
+.wishlist .b{color:var(--muted); font-size:.88rem}
+.tag{font-size:.75rem; font-weight:700; padding:.05rem .5rem; border-radius:999px; white-space:nowrap; align-self:center}
+.tag.p1{background:var(--p1-bg); color:var(--p1)}
+.tag.p2{background:var(--p2-bg); color:var(--p2)}
+.tag.p3{background:var(--p3-bg); color:var(--p3)}
+.tag.p4{background:var(--p4-bg); color:var(--p4)}
+
+.ideas{margin-top:1.2rem; padding:.9rem 1rem; border:1.5px dotted var(--line); border-radius:6px}
+.ideas h4{font-size:1rem; margin:0 0 .3rem}
+.ideas ul{margin:0; padding:0; list-style:none}
+.ideas li{display:flex; justify-content:space-between; gap:.8rem; padding:.3rem 0; border-bottom:1px solid var(--line)}
+.ideas li:last-child{border-bottom:0}
+.ideas .why{display:block; color:var(--muted); font-size:.88rem}
+
+button.spine{border:0; font:inherit; cursor:pointer}
+button.spine:focus-visible{outline:3px solid var(--p1); outline-offset:2px}
+.lnk{background:none; border:0; padding:0; font:inherit; color:inherit; text-align:left; cursor:pointer; text-decoration:underline; text-decoration-color:var(--line); text-underline-offset:3px}
+.lnk:hover{text-decoration-color:currentColor}
+.lnk:focus-visible{outline:3px solid var(--p1); outline-offset:2px}
+dialog{border:0; padding:0; width:calc(100% - 2rem); max-width:520px; border-radius:10px; background:var(--surface); color:var(--ink); box-shadow:0 10px 40px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(10,15,18,.5)}
+.sheet{padding:1.2rem 1.25rem 1.3rem; position:relative}
+.sheet .ser{margin:0 2.5rem .2rem 0; font-size:.88rem; color:var(--muted)}
+.sheet h3{font-family:"Alegreya",Georgia,serif; font-size:1.55rem; line-height:1.15; margin:0 2.5rem 0 0}
+.sheet .by{margin:.15rem 0 .8rem; color:var(--muted); font-style:italic; font-family:"Alegreya",Georgia,serif}
+.sheet .desc{margin:0 0 .8rem}
+.sheet .orig{margin:0 0 .8rem; font-size:.92rem; color:var(--muted)}
+.sheet .status{margin:0; display:inline-block; font-size:.88rem; font-weight:700; padding:.25rem .7rem; border-radius:999px}
+.status.own{background:var(--paper); color:var(--owned)}
+.status.p1{background:var(--p1-bg); color:var(--p1)} .status.p2{background:var(--p2-bg); color:var(--p2)} .status.p3{background:var(--p3-bg); color:var(--p3)} .status.p4{background:var(--p4-bg); color:var(--p4)}
+.close{position:absolute; top:.8rem; right:.8rem; width:2.2rem; height:2.2rem; border-radius:50%; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-size:1.2rem; line-height:1; cursor:pointer}
+.close:focus-visible{outline:3px solid var(--p1); outline-offset:2px}
+@media (max-width:600px){ dialog{margin:auto 0 0; width:100%; max-width:none; border-radius:14px 14px 0 0} .sheet{padding-bottom:calc(1.3rem + env(safe-area-inset-bottom,0px))} }
+.guide-btn{font:inherit; font-size:.85rem; font-weight:500; cursor:pointer; padding:.25rem .75rem; border-radius:999px; border:1.5px solid var(--p2); background:var(--p2-bg); color:var(--p2); margin-top:.5rem}
+.guide-btn:focus-visible{outline:3px solid var(--p1); outline-offset:2px}
+#guide .sheet{max-height:80vh; overflow-y:auto}
+#guideBody p{margin:0 0 .8rem}
+#guideBody h4{font-size:1rem; margin:1.1rem 0 .4rem}
+#guideBody ol{margin:0 0 .8rem; padding-left:1.4rem}
+#guideBody li{margin-bottom:.35rem}
+#guideBody .k{color:var(--muted); font-size:.9rem}
+#guideBody .own{color:var(--owned); font-weight:700}
+#guideBody .miss{color:var(--p2); font-weight:700}
+.empty{margin:2rem 0; padding:1rem; text-align:center; color:var(--muted); border:1px dashed var(--line); border-radius:6px}
+footer{margin-top:3.5rem; color:var(--muted); font-size:.9rem; border-top:1px solid var(--line); padding-top:1rem}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Mein Bücherregal</h1>
+    <p>Was schon im Regal steht und welche Lücken noch gefüllt werden wollen. Wer mir ein Buch schenken möchte: Am meisten freue ich mich über alles, was „Ganz oben“ steht. Am liebsten habe ich Taschenbücher, und gebraucht ist immer willkommen.</p>
+    <div class="legend">
+      <span><i class="key own"></i>Steht im Regal</span>
+      <span><i class="key p1"></i>Ganz oben</span>
+      <span><i class="key p2"></i>Gern</span>
+      <span><i class="key p3"></i>Irgendwann</span>
+      <span><i class="key p4"></i>Optional</span>
+    </div>
+  </header>
+
+  <nav class="topnav" id="topnav" aria-label="Bereiche">
+    <div class="tabs" role="tablist">
+      <a href="#ueberblick" data-sec="ueberblick" class="active">Überblick<span class="hc" data-hc="ueberblick"></span></a>
+      <a href="#unterhaltung" data-sec="unterhaltung">Unterhaltung<span class="hc" data-hc="unterhaltung"></span></a>
+      <a href="#sachbuecher" data-sec="sachbuecher">Sachbücher<span class="hc" data-hc="sachbuecher"></span></a>
+    </div>
+    <div class="searchrow">
+      <input class="search" id="q" type="search" placeholder="Titel, Autor oder Reihe suchen" aria-label="Alle Bücher durchsuchen">
+      <button type="button" class="filter-toggle" id="filterToggle" aria-expanded="false" aria-controls="filters">Filter<span class="dot hidden" id="filterDot" aria-hidden="true"></span></button>
+    </div>
+    <div class="chips hidden" id="filters" role="group" aria-label="Filter">
+      <button class="chip" data-prio="0" aria-pressed="true">Alles</button>
+      <button class="chip p1" data-prio="1" aria-pressed="false">Ganz oben</button>
+      <button class="chip p2" data-prio="2" aria-pressed="false">Gern</button>
+      <button class="chip p3" data-prio="3" aria-pressed="false">Irgendwann</button>
+      <button class="chip p4" data-prio="4" aria-pressed="false">Optional</button>
+      <button class="chip" id="onlyMissing" aria-pressed="false">Nur Fehlendes</button>
+    </div>
+  </nav>
+
+  <section class="results hidden" id="results" aria-live="polite">
+    <div class="reshead">
+      <span id="resText"></span>
+      <button type="button" class="reset" id="resClear">Zurücksetzen</button>
+    </div>
+    <div id="resList"></div>
+  </section>
+
+  <section class="part" id="ueberblick" aria-labelledby="t-ueberblick">
+    <h2 class="part-title" id="t-ueberblick">Überblick</h2>
+    <div class="panel">
+      <h3>Auf einen Blick</h3>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="panel">
+      <h3>Ganz oben auf der Wunschliste</h3>
+      <p class="sub">Diese Bücher schließen Lücken in Reihen, die ich gerade sammle.</p>
+      <ul class="top" id="topList"></ul>
+    </div>
+    <div class="panel">
+      <h3>Wie vollständig sind die Reihen?</h3>
+      <p class="sub">Jedes Kästchen ist ein Band. Antippen springt zur Reihe.</p>
+      <div class="prog" id="prog"></div>
+      <p class="complete" id="complete"></p>
+    </div>
+  </section>
+
+  <section class="part" id="unterhaltung" aria-labelledby="t-unterhaltung">
+    <h2 class="part-title" id="t-unterhaltung">Unterhaltung nach Autor</h2>
+    <p class="part-sub">Romane und Reihen, sortiert nach Autor. Ein Buch antippen zeigt Details.</p>
+    <div id="root"></div>
+    <p class="empty hidden" data-empty="root">Keine Treffer. Ändere den Suchbegriff oder setze die Filter auf „Alles“.</p>
+  </section>
+
+  <section class="part" id="sachbuecher" aria-labelledby="t-sachbuecher">
+    <h2 class="part-title" id="t-sachbuecher">Sachbücher</h2>
+    <p class="part-sub">Sortiert nach Thema.</p>
+    <div id="sachRoot"></div>
+    <p class="empty hidden" data-empty="sachRoot">Keine Treffer in den Sachbüchern.</p>
+  </section>
+
+  <button type="button" class="backbtn hidden" id="backBtn">Zurück zu den Treffern</button>
+
+  <dialog id="info" aria-labelledby="infoTitle"><div class="sheet">
+    <button type="button" class="close" id="infoClose" aria-label="Schließen">×</button>
+    <p class="ser" id="infoSer"></p>
+    <h3 id="infoTitle"></h3>
+    <p class="by" id="infoBy"></p>
+    <p class="desc" id="infoDesc"></p>
+    <p class="orig" id="infoOrig"></p>
+    <p class="status" id="infoStatus"></p>
+  </div></dialog>
+
+  <dialog id="guide" aria-labelledby="guideTitle"><div class="sheet">
+    <button type="button" class="close" id="guideClose" aria-label="Schließen">×</button>
+    <h3 id="guideTitle"></h3>
+    <div id="guideBody"></div>
+  </div></dialog>
+
+  <footer>Stand: November 2026. Prioritäten: „Ganz oben“ schließt Lücken in Lieblingsreihen, „Gern“ sind weitere Bücher von Lieblingsautoren, „Irgendwann“ ist alles, was nicht eilt, „Optional“ ist unwichtig.</footer>
+</div>
+
+<script>
+/* Buch: [Titel, Band, 1 = vorhanden / 0 = fehlt, Priorität (optional, sonst die der Reihe)] */
+const GROUPS = [
+{ group:"Lieblingsautoren", authors:[
+  { id:"follett", author:"Ken Follett", genre:"Historische Romane und Spionagethriller", hue:215, series:[
+    { name:"Kingsbridge", prio:1, note:"„Der Morgen einer neuen Zeit“ ist die Vorgeschichte und kann auch zuerst gelesen werden.", books:[
+      ["Die Säulen der Erde",1,1],["Die Tore der Welt",2,1],["Das Fundament der Ewigkeit",3,1],
+      ["Der Morgen einer neuen Zeit",4,1],["Die Waffen des Lichts",5,1]]},
+    { name:"Jahrhundert-Trilogie", prio:1, books:[
+      ["Sturz der Titanen",1,1],["Winter der Welt",2,1],["Kinder der Freiheit",3,1]]},
+    { name:"Einzelbände", prio:2, singles:true, books:[
+      ["Der Modigliani-Skandal",null,0,3],["Die Spur der Füchse",null,1],["Die Nadel",null,1],["Dreifach",null,0],
+      ["Der Schlüssel zu Rebecca",null,1],["Der Mann aus St. Petersburg",null,0],["Auf den Schwingen des Adlers",null,0,3],
+      ["Die Löwen",null,0],["Nacht über den Wassern",null,0],["Die Pfeiler der Macht",null,1],
+      ["Die Brücken der Freiheit",null,0],["Der dritte Zwilling",null,0],["Die Kinder von Eden",null,1],
+      ["Das zweite Gedächtnis",null,0],["Die Leopardin",null,0],["Mitternachtsfalken",null,0],["Eisfieber",null,0],
+      ["Never – Die letzte Entscheidung",null,0],["Stonehenge – Die Kathedrale der Zeit",null,0,1]]}
+  ]},
+  { id:"gable", author:"Rebecca Gablé", genre:"Historische Romane aus dem englischen und deutschen Mittelalter", hue:350, series:[
+    { name:"Waringham-Saga", prio:1, books:[
+      ["Das Lächeln der Fortuna",1,1],["Die Hüter der Rose",2,1],["Das Spiel der Könige",3,1],["Der dunkle Thron",4,1],
+      ["Der Palast der Meere",5,1],["Teufelskrone",6,1],["Drachenbanner",7,1]]},
+    { name:"Helmsby", prio:1, books:[["Das zweite Königreich",1,1],["Hiobs Brüder",2,0],["Rabenthron",3,0]]},
+    { name:"Otto der Große", prio:1, books:[["Das Haupt der Welt",1,1],["Die fremde Königin",2,1]]},
+    { name:"Einzelbände", prio:2, singles:true, note:"„Der König der purpurnen Stadt“ spielt kurz vor der Waringham-Saga.", books:[
+      ["Der König der purpurnen Stadt",null,1],["Die Siedler von Catan",null,0,3]]}
+  ], ideas:[["Von Ratlosen und Löwenherzen","Ihr Sachbuch über das englische Mittelalter, unterhaltsam geschrieben",3]]},
+  { id:"grisham", author:"John Grisham", genre:"Justizthriller", hue:200, series:[
+    { name:"Jake Brigance", prio:1, note:"Nur ein Band fehlt, dann ist die Reihe komplett.", books:[
+      ["Die Jury",1,1],["Die Erbin",2,0],["Der Polizist",3,1],["Die Heimkehr","+",1]]},
+    { name:"Mitch McDeere", prio:2, books:[["Die Firma",1,0],["Die Entführung",2,0]]},
+    { name:"Bruce Cable", prio:2, books:[["Das Original",1,0],["Das Manuskript",2,0],["Die Legende",3,0]]},
+    { name:"Whistler", prio:2, books:[["Bestechung",1,0],["Der Verdächtige",2,0]]},
+    { name:"Einzelbände", prio:2, singles:true, books:[
+      ["Die Akte",null,0],["Der Klient",null,0],["Die Kammer",null,1],["Der Regenmacher",null,1],["Das Urteil",null,1],
+      ["Der Partner",null,1],["Der Verrat",null,1],["Das Testament",null,1],["Die Bruderschaft",null,1],["Die Farm",null,1],
+      ["Das Fest",null,0,3],["Der Richter",null,1],["Die Schuld",null,1],["Der Coach",null,1],["Die Liste",null,1],
+      ["Die Begnadigung",null,1],["Der Gefangene",null,1],["Touchdown",null,0,3],["Berufung",null,0],["Der Anwalt",null,0],
+      ["Das Gesetz",null,1],["Das Geständnis",null,0],["Verteidigung",null,1],["Das Komplott",null,1],["Home Run",null,0,3],
+      ["Anklage",null,0],["Der Gerechte",null,0],["Forderung",null,1],["Das Bekenntnis",null,1],["Die Wächter",null,1],
+      ["Das Talent",null,0,3],["Feinde",null,0],["Das Vermächtnis",null,0]]}
+  ]}
+]},
+{ group:"Weitere Autoren und Reihen", authors:[
+  { id:"cornwell", author:"Bernard Cornwell", genre:"Historische Romane", hue:30, series:[
+    { name:"Uhtred-Saga", prio:1, books:[
+      ["Das letzte Königreich",1,1],["Der weiße Reiter",2,1],["Die Herren des Nordens",3,1],["Schwertgesang",4,1],
+      ["Das brennende Land",5,1],["Der sterbende König",6,1],["Der Heidenfürst",7,1],["Der leere Thron",8,0],
+      ["Die dunklen Krieger",9,0],["Der Flammenträger",10,0],["Wolfskrieg",11,0],["Das Königsschwert",12,1],["Der Herr der Schlacht",13,0]]},
+    { name:"Artus-Chroniken", prio:1, note:"Neuere Ausgaben von Band 3 heißen „Arthurs letzter Schwur“.", books:[
+      ["Der Winterkönig",1,1],["Der Schattenfürst",2,1],["Excalibur",3,1]]},
+    { name:"Die Bücher vom Heiligen Gral", prio:2, note:"„1356“ ist eine lose Fortsetzung mit Thomas von Hookton.", books:[
+      ["Der Bogenschütze",1,1],["Der Wanderer",2,1],["Der Erzfeind",3,1],["1356","+",0]]}
+  ], ideas:[
+    ["Das Zeichen des Sieges","Einzelroman über die Schlacht von Azincourt",2],
+    ["Der Rebell","Auftakt der Starbuck-Chroniken im amerikanischen Bürgerkrieg",3]]},
+  { id:"wolf", author:"Daniel Wolf", genre:"Historische Romane", hue:40, series:[
+    { name:"Fleury-Saga", prio:1, books:[["Das Salz der Erde",1,1],["Das Licht der Welt",2,0],["Das Gold des Meeres",3,0],["Die Gabe des Himmels",4,0]]},
+    { name:"Templer-Reihe", prio:2, books:[["Das Reich der Rose",1,0],["Der Thron der Lilie",2,0]]},
+    { name:"Friesen-Saga", prio:2, books:[["Im Zeichen des Löwen",1,0],["Im Bann des Adlers",2,0]]}
+  ]},
+  { id:"rowling", author:"J. K. Rowling", genre:"Fantasy", hue:28, series:[
+    { name:"Harry Potter", prio:1, note:"Nur ein Band fehlt, dann ist die Reihe komplett.", books:[
+      ["Der Stein der Weisen",1,1],["Die Kammer des Schreckens",2,1],["Der Gefangene von Askaban",3,0],["Der Feuerkelch",4,1],
+      ["Der Orden des Phönix",5,1],["Der Halbblutprinz",6,1],["Die Heiligtümer des Todes",7,1]]},
+    { name:"Aus der Welt von Harry Potter", prio:3, singles:true, books:[["Die Märchen von Beedle dem Barden",null,1]]}
+  ], ideas:[["Harry Potter und das verwunschene Kind","Das Theaterstück, spielt 19 Jahre nach Band 7",3]]},
+  { id:"collins", author:"Suzanne Collins", genre:"Dystopie", hue:15, series:[
+    { name:"Die Tribute von Panem", prio:2, note:"Band 1–3 auf Deutsch im Schuber. Zusätzlich auf Englisch: The Hunger Games, Catching Fire. Die Vorgeschichte X ist die englische Ausgabe.", books:[
+      ["Tödliche Spiele",1,1],["Gefährliche Liebe",2,1],["Flammender Zorn",3,1],
+      ["Das Lied von Vogel und Schlange","X",1],["Der Tag bricht an","L",0,4]]}
+  ]},
+  { id:"paolini", author:"Christopher Paolini", genre:"Fantasy", hue:220, series:[
+    { name:"Eragon", prio:1, books:[["Das Vermächtnis der Drachenreiter",1,1],["Der Auftrag des Ältesten",2,1],["Die Weisheit des Feuers",3,1],["Das Erbe der Macht",4,1]]}
+  ], ideas:[["Murtagh – Eine dunkle Bedrohung","Spielt ein Jahr nach dem Ende von Eragon",3]]},
+  { id:"tolkien", author:"J. R. R. Tolkien", genre:"Fantasy", hue:110, series:[
+    { name:"Der Herr der Ringe", prio:1, books:[["Die Gefährten",1,1],["Die zwei Türme",2,1],["Die Rückkehr des Königs",3,1]]},
+    { name:"Einzelbände", prio:3, singles:true, books:[["Der kleine Hobbit",null,1]]}
+  ], ideas:[["Das Silmarillion","Die Vorgeschichte von Mittelerde",3]]},
+  { id:"doyle", author:"Arthur Conan Doyle", genre:"Klassische Kriminalgeschichten", hue:160, series:[
+    { name:"Sherlock Holmes", prio:2, guide:"sherlock", note:"Der Original-Kanon von Doyle: 4 Romane und 5 Erzählbände in Erscheinungsreihenfolge. Der Anaconda-Sammelband enthält Band 3 bis 6 und zwei Geschichten aus Band 8.", books:[
+      ["Eine Studie in Scharlachrot",1,0],["Das Zeichen der Vier",2,0],["Die Abenteuer des Sherlock Holmes",3,1],
+      ["Die Memoiren des Sherlock Holmes",4,1],["Der Hund der Baskervilles",5,1],["Die Rückkehr des Sherlock Holmes",6,1],
+      ["Das Tal der Angst",7,0],["Seine Abschiedsvorstellung",8,0],["Sherlock Holmes’ Buch der Fälle",9,0]]}
+  ]},
+  { id:"funke", author:"Cornelia Funke", genre:"Fantasy", hue:5, series:[
+    { name:"Tintenwelt", prio:3, books:[["Tintenherz",1,1],["Tintenblut",2,0],["Tintentod",3,0],["Die Farbe der Rache",4,0]]},
+    { name:"Einzelbände", prio:3, singles:true, books:[["Herr der Diebe",null,1]]}
+  ]},
+  { id:"link", author:"Charlotte Link", genre:"Spannungs- und Familienromane", hue:300, series:[
+    { name:"Sturmzeit-Trilogie", prio:3, books:[["Sturmzeit",1,1],["Wilde Lupinen",2,0],["Die Stunde der Erben",3,0]]},
+    { name:"Einzelbände", prio:3, singles:true, books:[["Schattenspiel",null,1],["Das andere Kind",null,1],["Im Tal des Fuchses",null,1]]}
+  ]},
+  { id:"riordan", author:"Rick Riordan", genre:"Jugendfantasy", hue:195, series:[
+    { name:"Percy Jackson", prio:4, books:[
+      ["Diebe im Olymp",1,0],["Im Bann des Zyklopen",2,0],["Der Fluch des Titanen",3,1],["Die Schlacht um das Labyrinth",4,0],
+      ["Die letzte Göttin",5,0],["Der Kelch der Götter",6,0],["Der Zorn der dreifachen Göttin",7,0]]}
+  ]},
+  { id:"riley", author:"Lucinda Riley", genre:"Familiensaga", hue:265, series:[
+    { name:"Die sieben Schwestern", prio:4, books:[
+      ["Die sieben Schwestern",1,1],["Die Sturmschwester",2,0],["Die Schattenschwester",3,0],["Die Perlenschwester",4,0],
+      ["Die Mondschwester",5,0],["Die Sonnenschwester",6,0],["Die verschwundene Schwester",7,0],["Atlas – Die Geschichte von Pa Salt",8,0]]}
+  ]}
+]},
+{ group:"Einzelbücher", authors:[
+  { id:"sonstiges", split:true, author:"Weitere Bücher im Regal", genre:"Einzelne Bücher von Autoren, die ich nicht gezielt sammle", hue:180, series:[
+    { name:"Im Regal", prio:3, singles:true, books:[
+      ["Leo Tolstoi: Krieg und Frieden",null,1],["Homer: Ilias & Odyssee",null,1],["John Katzenbach: Der Wolf",null,1],
+      ["Silvana De Mari: Der letzte Elf",null,1],["Jojo Moyes: Ein ganz neues Leben",null,1],
+      ["Megan Miranda: Tick Tack",null,1],["Carry Slee: Tanz im Rausch",null,1]]}
+  ]}
+]},
+{ group:"Sachbücher", sect:"sach", authors:[
+  { id:"sach-fussball", split:true, author:"Fußball und Sport", genre:"Taktik, Datenanalyse und Sportpsychologie", hue:145, series:[
+    { name:"Im Regal", prio:3, singles:true, books:[
+      ["Mike Hughes, Ian M. Franks, Henriette Dancs: Essentials of Performance Analysis in Sport",null,1],
+      ["Christoph Biermann: Football Hackers",null,1],
+      ["Marco Henseling, René Marić: Fußball durch Fußball",null,1],
+      ["Matthias Greulich, Elmar Neveling: Fußball-Taktik – Die Anatomie des modernen Spiels",null,1],
+      ["Timo Jankowski: Matchplan Fußball",null,1],
+      ["Ian Graham: How to Win the Premier League",null,1],
+      ["Daniel Memmert, Dominik Raabe: Revolution im Profifußball",null,1],
+      ["David Sumpter: Soccermatics",null,1],
+      ["Chris Anderson, David Sally: The Numbers Game",null,1],
+      ["Tobias Escher: Der Schlüssel zum Spiel",null,1],
+      ["Tobias Escher: Die Zeit der Strategen",null,1],
+      ["James Kerr: Das Geheimnis der All Blacks",null,1],
+      ["Amit Katwala: The Athletic Brain",null,1]]}
+  ], ideas:[["Tobias Escher: Vom Libero zur Doppelsechs","Taktikgeschichte des deutschen Fußballs",3]]},
+  { id:"sach-gesellschaft", split:true, author:"Geschichte, Politik und Gesellschaft", genre:"Menschheitsgeschichte, Wirtschaft und politisches Engagement", hue:255, series:[
+    { name:"Im Regal", prio:3, singles:true, books:[
+      ["Yuval Noah Harari: Sapiens",null,1],
+      ["Karl Marx: Das Kapital",null,1],
+      ["Malala Yousafzai: Ich bin Malala",null,1],
+      ["Greta Thunberg: No One Is Too Small to Make a Difference",null,1]]}
+  ], ideas:[["Yuval Noah Harari: Homo Deus","Die Fortsetzung von Sapiens, ein Blick in die Zukunft",3]]},
+  { id:"sach-wissenschaft", split:true, author:"Wissenschaft und Technik", genre:"Naturwissenschaft, Mathematik und künstliche Intelligenz", hue:205, series:[
+    { name:"Im Regal", prio:3, singles:true, books:[
+      ["Lawrence M. Krauss: A Universe from Nothing",null,1],
+      ["Richard Dawkins: The God Delusion",null,1],
+      ["Niamh Nic Daéid, Christian Cole: Zahlen in 30 Sekunden",null,1],
+      ["Andriy Burkov: The Hundred-Page Machine Learning Book",null,1]]}
+  ]},
+  { id:"sach-kochen", split:true, author:"Kochen und Ernährung", genre:"Kochbücher und Ernährungsratgeber", hue:25, series:[
+    { name:"Im Regal", prio:3, singles:true, books:[
+      ["Martina Kittler: Expresskochen vegetarisch",null,1],
+      ["Kamp, Schäfer: Gesund essen – Fruktosearm genießen",null,1],
+      ["Käts Studentenküche",null,1],
+      ["Probier’s mal vegetarisch",null,1],
+      ["Koch dich glücklich! Lunch to go",null,1],
+      ["Schokolade",null,1],
+      ["Selber machen statt kaufen – Küche",null,1],
+      ["Jessie Inchauspé: Der Glukose-Trick",null,1]]}
+  ]}
+]},
+{ group:"Neu entdecken", authors:[
+  { id:"entdecken", author:"Passende neue Autoren", genre:"Historische Romane in der Art von Follett und Gablé", hue:0, series:[], ideas:[
+    ["Noah Gordon: Der Medicus","Ein englischer Junge wird im 11. Jahrhundert Arzt in Persien",2],
+    ["Umberto Eco: Der Name der Rose","Krimi in einer Abtei im 14. Jahrhundert",2],
+    ["Sabine Ebert: Das Geheimnis der Hebamme","Auftakt einer Mittelalter-Reihe aus Sachsen",2],
+    ["Donna W. Cross: Die Päpstin","Die Legende einer Frau auf dem Papstthron",3],
+    ["Edward Rutherfurd: London","Die Geschichte der Stadt über 2000 Jahre, erzählt über Familien",3],
+    ["Hilary Mantel: Wölfe","Thomas Cromwell am Hof Heinrichs VIII.",3]]}
+]}
+];
+
+const PRIO = {1:"Ganz oben",2:"Gern",3:"Irgendwann",4:"Optional"};
+const pr = (b,s) => b[3] ?? s.prio;
+
+function spineColor(hue,i){ return `hsl(${hue + (i%3)*6}, ${30 + (i*11)%20}%, ${24 + (i*7)%14}%)`; }
+function spineHeight(t,i){ return 150 + ((t.length*7 + i*13) % 30); }
+const slug = s => s.toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+
+/* Reihenbeschreibungen */
+const SDESC = {
+  "Kingsbridge":"Die fiktive Stadt Kingsbridge über rund 800 Jahre. Jeder Band spielt in einer anderen Epoche und ist für sich lesbar.",
+  "Jahrhundert-Trilogie":"Fünf Familien aus Deutschland, England, Russland, Wales und den USA durch das 20. Jahrhundert.",
+  "Waringham-Saga":"Die Adelsfamilie Waringham durch mehrere Jahrhunderte englischer Geschichte.",
+  "Helmsby":"Die Familie Helmsby im England der Normannenzeit.",
+  "Otto der Große":"Otto der Große und das ostfränkische Reich im 10. Jahrhundert.",
+  "Jake Brigance":"Anwalt Jake Brigance in der Kleinstadt Clanton, Mississippi.",
+  "Mitch McDeere":"Der Anwalt Mitch McDeere aus „Die Firma“.",
+  "Bruce Cable":"Buchhändler Bruce Cable auf Camino Island, Florida.",
+  "Whistler":"Ermittlerin Lacy Stoltz von der Richteraufsicht in Florida.",
+  "Uhtred-Saga":"Uhtred von Bebbanburg kämpft im 9. und 10. Jahrhundert zwischen Dänen und Sachsen um seine Heimat, während England entsteht. Vorlage der Serie „The Last Kingdom“.",
+  "Artus-Chroniken":"Die Artussage ohne Zauberglanz, erzählt vom Krieger Derfel.",
+  "Die Bücher vom Heiligen Gral":"Der Bogenschütze Thomas von Hookton im Hundertjährigen Krieg auf der Suche nach dem Gral.",
+  "Fleury-Saga":"Die Händlerfamilie Fleury in der lothringischen Stadt Varennes vom 12. bis 14. Jahrhundert. Jeder Band ist für sich lesbar.",
+  "Templer-Reihe":"Frankreich ab 1293: Der Ritter Constantin Fleury, die Goliardin Mélisande und ein Templer zwischen den Fronten von Papst und König.",
+  "Friesen-Saga":"Historische Familiensaga aus Friesland.",
+  "Harry Potter":"Harrys sieben Schuljahre in Hogwarts und der Kampf gegen Voldemort.",
+  "Die Tribute von Panem":"Jugendliche müssen in einem diktatorischen Zukunftsstaat in den Hungerspielen gegeneinander antreten.",
+  "Eragon":"Der Bauernjunge Eragon wird Drachenreiter und kämpft gegen den Tyrannen Galbatorix.",
+  "Der Herr der Ringe":"Frodo soll den Einen Ring im Schicksalsberg zerstören.",
+  "Tintenwelt":"Meggie und ihr Vater können Figuren aus Büchern herauslesen.",
+  "Sturmzeit-Trilogie":"Familiensaga über mehrere Generationen im Deutschland des 20. Jahrhunderts.",
+  "Percy Jackson":"Percy erfährt, dass er der Sohn Poseidons ist, und gerät in die Welt der griechischen Götter.",
+  "Die sieben Schwestern":"Nach dem Tod ihres Adoptivvaters Pa Salt suchen sechs Schwestern nach ihrer Herkunft. Jeder Band erzählt die Geschichte einer Schwester."
+};
+
+/* Buchinfos: [Originaltitel oder null, Jahr, Kurzinhalt] */
+const INFO = {
+  "Die Säulen der Erde":["The Pillars of the Earth",1989,"Der Bau einer Kathedrale im 12. Jahrhundert, mitten im Bürgerkrieg zwischen Stephan und Maud."],
+  "Die Tore der Welt":["World Without End",2007,"Kingsbridge im 14. Jahrhundert, zur Zeit der großen Pest."],
+  "Das Fundament der Ewigkeit":["A Column of Fire",2017,"Glaubenskriege und Geheimdienste im 16. Jahrhundert unter Elisabeth I."],
+  "Der Morgen einer neuen Zeit":["The Evening and the Morning",2020,"England um das Jahr 1000 und die Anfänge von Kingsbridge. Vorgeschichte zu „Die Säulen der Erde“."],
+  "Die Waffen des Lichts":["The Armour of Light",2023,"Kingsbridge zur Zeit der Industrialisierung und der Napoleonischen Kriege."],
+  "Sturz der Titanen":["Fall of Giants",2010,"Erster Weltkrieg, Russische Revolution und Frauenwahlrecht."],
+  "Winter der Welt":["Winter of the World",2012,"Die nächste Generation im Zweiten Weltkrieg."],
+  "Kinder der Freiheit":["Edge of Eternity",2014,"Kalter Krieg, Bürgerrechtsbewegung und Mauerfall."],
+  "Der Modigliani-Skandal":["The Modigliani Scandal",1976,"Die Jagd nach einem verschollenen Gemälde. Folletts früher Kunstkrimi."],
+  "Die Spur der Füchse":["Paper Money",1977,"Ein Tag in London zwischen Zeitungsredaktion, Finanzwelt und Unterwelt."],
+  "Die Nadel":["Eye of the Needle",1978,"Ein deutscher Spion kennt 1944 das Geheimnis der Invasion und strandet auf einer schottischen Insel."],
+  "Dreifach":["Triple",1979,"Ein Mossad-Agent soll 1968 heimlich Uran beschaffen."],
+  "Der Schlüssel zu Rebecca":["The Key to Rebecca",1980,"Ein deutscher Spion in Kairo 1942, verschlüsselt mit einem Roman."],
+  "Der Mann aus St. Petersburg":["The Man from St Petersburg",1982,"London 1914: Ein russischer Anarchist will Geheimverhandlungen vor dem Krieg sabotieren."],
+  "Auf den Schwingen des Adlers":["On Wings of Eagles",1983,"Tatsachenbericht über die Befreiung zweier Manager aus einem iranischen Gefängnis 1979."],
+  "Die Löwen":["Lie Down with Lions",1986,"Eine Engländerin zwischen zwei Männern im Afghanistan der 1980er Jahre."],
+  "Nacht über den Wassern":["Night Over Water",1991,"Der letzte Flug eines Luxus-Flugboots von England nach Amerika bei Kriegsbeginn 1939."],
+  "Die Pfeiler der Macht":["A Dangerous Fortune",1993,"Intrigen in einer Londoner Bankiersfamilie im 19. Jahrhundert."],
+  "Die Brücken der Freiheit":["A Place Called Freedom",1995,"Ein schottischer Bergarbeiter kämpft im 18. Jahrhundert um seine Freiheit, bis nach Virginia."],
+  "Der dritte Zwilling":["The Third Twin",1996,"Eine Forscherin stößt auf geheime Genexperimente."],
+  "Die Kinder von Eden":["The Hammer of Eden",1998,"Eine Sekte droht, in Kalifornien ein Erdbeben auszulösen."],
+  "Das zweite Gedächtnis":["Code to Zero",2000,"Ein Raketenforscher wacht 1958 ohne Erinnerung auf."],
+  "Die Leopardin":["Jackdaws",2001,"Ein Kommando aus Frauen soll vor dem D-Day eine Telefonzentrale in Frankreich sprengen."],
+  "Mitternachtsfalken":["Hornet Flight",2002,"Zwei junge Dänen wollen 1941 deutsche Radargeheimnisse nach England bringen."],
+  "Eisfieber":["Whiteout",2004,"Aus einem Hochsicherheitslabor wird an Weihnachten ein tödliches Virus gestohlen."],
+  "Never – Die letzte Entscheidung":["Never",2021,"Eine Kette kleiner Krisen droht in einen Weltkrieg zu münden."],
+  "Stonehenge – Die Kathedrale der Zeit":["Circle of Days",2025,"Der Bau von Stonehenge in der Jungsteinzeit."],
+
+  "Das Lächeln der Fortuna":[null,1997,"Robin of Waringham im 14. Jahrhundert, zur Zeit des Hundertjährigen Krieges."],
+  "Die Hüter der Rose":[null,2005,"Johns Weg im 15. Jahrhundert, zwischen Frankreich-Feldzügen und Hofintrigen."],
+  "Das Spiel der Könige":[null,2007,"Die Waringhams in den Rosenkriegen."],
+  "Der dunkle Thron":[null,2011,"Nick of Waringham am Hof Heinrichs VIII."],
+  "Der Palast der Meere":[null,2015,"Die Waringhams im Zeitalter Elisabeths I."],
+  "Teufelskrone":[null,2019,"Die Zeit von Richard Löwenherz und Johann Ohneland. Spielt vor allen anderen Bänden."],
+  "Drachenbanner":[null,2022,"Die Waringhams im 13. Jahrhundert, Fortsetzung von „Teufelskrone“."],
+  "Das zweite Königreich":[null,2000,"Caedmon of Helmsby erlebt 1066 die normannische Eroberung Englands."],
+  "Hiobs Brüder":[null,2009,"Die Helmsbys im 12. Jahrhundert, zur Zeit des Thronstreits zwischen Stephan und Maud."],
+  "Rabenthron":[null,2025,"Der neueste Band der Helmsby-Reihe."],
+  "Das Haupt der Welt":[null,2013,"Der junge Otto wird König und muss sein Reich zusammenhalten."],
+  "Die fremde Königin":[null,2017,"Otto, Königin Adelheid und der Weg zur Kaiserkrone."],
+  "Der König der purpurnen Stadt":[null,2002,"Ein junger Kaufmann im London Eduards III. Spielt kurz vor der Waringham-Saga."],
+  "Die Siedler von Catan":[null,2003,"Wikinger besiedeln eine unbekannte Insel. Roman zum Brettspiel."],
+
+  "Die Jury":["A Time to Kill",1989,"Ein Vater rächt seine Tochter, Jake Brigance verteidigt ihn. Grishams erster Roman."],
+  "Die Erbin":["Sycamore Row",2013,"Ein umstrittenes Testament spaltet Clanton. Jake Brigance übernimmt den Fall."],
+  "Der Polizist":["A Time for Mercy",2020,"Jake verteidigt einen Jungen, der einen Polizisten erschossen hat."],
+  "Die Heimkehr":["Sparring Partners",2022,"Drei Kurzromane, einer davon mit Jake Brigance."],
+  "Die Firma":["The Firm",1991,"Ein junger Anwalt merkt, dass seine Traumkanzlei für die Mafia arbeitet."],
+  "Die Entführung":["The Exchange",2023,"Mitch McDeere 15 Jahre später: Eine Kollegin wird in Libyen entführt."],
+  "Das Original":["Camino Island",2017,"Gestohlene Manuskripte von F. Scott Fitzgerald und ein Buchhändler unter Verdacht."],
+  "Das Manuskript":["Camino Winds",2020,"Nach einem Hurrikan wird ein Autor tot aufgefunden."],
+  "Die Legende":["Camino Ghosts",2024,"Die Geschichte einer verlassenen Insel und ihrer letzten Bewohnerin."],
+  "Bestechung":["The Whistler",2016,"Eine Ermittlerin deckt eine korrupte Richterin auf."],
+  "Der Verdächtige":["The Judge's List",2021,"Ein Serienmörder, der Richter ist."],
+  "Die Akte":["The Pelican Brief",1992,"Eine Jurastudentin ahnt, wer hinter den Morden an zwei Verfassungsrichtern steckt."],
+  "Der Klient":["The Client",1993,"Ein elfjähriger Junge kennt das Geheimnis eines Mafiamords."],
+  "Die Kammer":["The Chamber",1994,"Ein junger Anwalt verteidigt seinen Großvater in der Todeszelle."],
+  "Der Regenmacher":["The Rainmaker",1995,"Ein Berufsanfänger gegen einen Versicherungskonzern."],
+  "Das Urteil":["The Runaway Jury",1996,"Eine Jury wird in einem Prozess gegen die Tabakindustrie manipuliert."],
+  "Der Partner":["The Partner",1997,"Ein Anwalt täuscht seinen Tod vor und verschwindet mit 90 Millionen Dollar."],
+  "Der Verrat":["The Street Lawyer",1998,"Ein Wirtschaftsanwalt wechselt die Seite und vertritt Obdachlose."],
+  "Das Testament":["The Testament",1999,"Ein Milliardär vererbt alles einer Missionarin im brasilianischen Pantanal."],
+  "Die Bruderschaft":["The Brethren",2000,"Drei verurteilte Richter erpressen aus dem Gefängnis heraus."],
+  "Die Farm":["A Painted House",2001,"Ein Sommer auf einer Baumwollfarm in Arkansas 1952. Kein Justizroman."],
+  "Das Fest":["Skipping Christmas",2001,"Ein Ehepaar will Weihnachten einfach ausfallen lassen. Komödie."],
+  "Der Richter":["The Summons",2002,"Nach dem Tod seines Vaters findet ein Juraprofessor drei Millionen Dollar in bar."],
+  "Die Schuld":["The King of Torts",2003,"Ein Pflichtverteidiger wird reicher Sammelklagen-Anwalt."],
+  "Der Coach":["Bleachers",2003,"Ehemalige Football-Spieler versammeln sich am Sterbebett ihres Trainers."],
+  "Die Liste":["The Last Juror",2004,"Ein junger Zeitungsverleger in Clanton und ein Mordprozess in den 1970ern."],
+  "Die Begnadigung":["The Broker",2005,"Ein begnadigter Lobbyist wird in Italien versteckt und gejagt."],
+  "Der Gefangene":["The Innocent Man",2006,"Sachbuch über einen echten Justizirrtum in Oklahoma."],
+  "Touchdown":["Playing for Pizza",2007,"Ein Football-Profi landet in einer italienischen Amateurliga."],
+  "Berufung":["The Appeal",2008,"Ein Konzern kauft sich einen Richter am Obersten Gericht."],
+  "Der Anwalt":["The Associate",2009,"Ein Jurastudent wird erpresst, in einer Großkanzlei zu spionieren."],
+  "Das Gesetz":["Ford County",2009,"Erzählungen aus dem Bezirk um Clanton."],
+  "Das Geständnis":["The Confession",2010,"Ein Unschuldiger soll hingerichtet werden, der wahre Täter meldet sich."],
+  "Verteidigung":["The Litigators",2011,"Eine kleine Kanzlei wagt eine Sammelklage gegen einen Pharmakonzern."],
+  "Das Komplott":["The Racketeer",2012,"Ein Häftling weiß, wer einen Bundesrichter ermordet hat."],
+  "Home Run":["Calico Joe",2012,"Ein Baseballspiel und seine Folgen. Kein Justizroman."],
+  "Anklage":["Gray Mountain",2014,"Eine New Yorker Anwältin kämpft in den Appalachen gegen die Kohleindustrie."],
+  "Der Gerechte":["Rogue Lawyer",2015,"Ein Strafverteidiger, der die Fälle nimmt, die sonst keiner will."],
+  "Forderung":["The Rooster Bar",2017,"Drei Jurastudenten wehren sich gegen Studienkredit-Betrug."],
+  "Das Bekenntnis":["The Reckoning",2018,"Ein Kriegsheld erschießt 1946 den Pfarrer und schweigt über sein Motiv."],
+  "Die Wächter":["The Guardians",2019,"Ein Anwalt kämpft für unschuldig Verurteilte."],
+  "Das Talent":["Sooley",2021,"Ein junger Basketballer aus dem Südsudan. Kein Justizroman."],
+  "Feinde":["The Boys from Biloxi",2022,"Zwei Jugendfreunde, einer wird Staatsanwalt, der andere Mafioso."],
+  "Das Vermächtnis":["The Widow",2025,"Ein Kleinstadtanwalt gerät in einen Mordfall um eine wohlhabende Witwe."],
+
+  "Das letzte Königreich":["The Last Kingdom",2004],"Der weiße Reiter":["The Pale Horseman",2005],
+  "Die Herren des Nordens":["The Lords of the North",2006],"Schwertgesang":["Sword Song",2007],
+  "Das brennende Land":["The Burning Land",2009],"Der sterbende König":["Death of Kings",2011],
+  "Der Heidenfürst":["The Pagan Lord",2013],"Der leere Thron":["The Empty Throne",2014],
+  "Die dunklen Krieger":["Warriors of the Storm",2015],"Der Flammenträger":["The Flame Bearer",2016],
+  "Wolfskrieg":["War of the Wolf",2018],"Das Königsschwert":["Sword of Kings",2019],
+  "Der Herr der Schlacht":["War Lord",2020,"Der letzte Band der Saga."],
+  "Der Winterkönig":["The Winter King",1995],"Der Schattenfürst":["Enemy of God",1996],
+  "Excalibur":["Excalibur",1997,"Neuere Ausgaben heißen „Arthurs letzter Schwur“."],
+  "Der Bogenschütze":["Harlequin",2000],"Der Wanderer":["Vagabond",2002],"Der Erzfeind":["Heretic",2003],
+  "1356":["1356",2012,"Thomas von Hookton vor der Schlacht von Poitiers. Lose Fortsetzung der Gral-Trilogie."],
+
+  "Das Salz der Erde":[null,2013,"Salzhändler Michel de Fleury will seine Stadt 1187 von einem korrupten Bischof befreien."],
+  "Das Licht der Welt":[null,2014,"Buchmaler Rémy Fleury träumt 1218 von einer Schule für alle."],
+  "Das Gold des Meeres":[null,2016,"Die Gebrüder Fleury im Jahr 1260, mit einer Reise bis an den Rand der bekannten Welt."],
+  "Die Gabe des Himmels":[null,2018,"Medizinstudent Adrien Fleury kehrt 1346 heim, kurz bevor die Pest kommt."],
+
+  "Der Stein der Weisen":["Philosopher's Stone",1997],"Die Kammer des Schreckens":["Chamber of Secrets",1998],
+  "Der Gefangene von Askaban":["Prisoner of Azkaban",1999,"Sirius Black bricht aus Askaban aus. Viele halten ihn für den besten Band der Reihe."],
+  "Der Feuerkelch":["Goblet of Fire",2000],"Der Orden des Phönix":["Order of the Phoenix",2003],
+  "Der Halbblutprinz":["Half-Blood Prince",2005],"Die Heiligtümer des Todes":["Deathly Hallows",2007],
+  "Die Märchen von Beedle dem Barden":["The Tales of Beedle the Bard",2008,"Zauberermärchen aus der Welt von Harry Potter."],
+
+  "Tödliche Spiele":["The Hunger Games",2008],"Gefährliche Liebe":["Catching Fire",2009],"Flammender Zorn":["Mockingjay",2010],
+  "Das Lied von Vogel und Schlange":["The Ballad of Songbirds and Snakes",2020,"Der junge Coriolanus Snow, 64 Jahre vor Katniss."],
+  "Der Tag bricht an":["Sunrise on the Reaping",2025,"Haymitch Abernathy bei den 50. Hungerspielen, 24 Jahre vor Katniss."],
+
+  "Das Vermächtnis der Drachenreiter":["Eragon",2002],"Der Auftrag des Ältesten":["Eldest",2005],
+  "Die Weisheit des Feuers":["Brisingr",2008],"Das Erbe der Macht":["Inheritance",2011],
+  "Die Gefährten":["The Fellowship of the Ring",1954],"Die zwei Türme":["The Two Towers",1954],
+  "Die Rückkehr des Königs":["The Return of the King",1955],
+  "Der kleine Hobbit":["The Hobbit",1937,"Bilbo zieht mit Zwergen los, um einen Drachenschatz zu holen. Vorgeschichte zum Herrn der Ringe."],
+
+  "Eine Studie in Scharlachrot":["A Study in Scarlet",1887,"Roman. Der allererste Fall: Watson lernt Holmes kennen."],
+  "Das Zeichen der Vier":["The Sign of the Four",1890,"Roman um einen Schatz aus Indien. Watson lernt seine spätere Frau kennen."],
+  "Die Abenteuer des Sherlock Holmes":["The Adventures of Sherlock Holmes",1892,"12 Erzählungen, u. a. „Der Bund der Rothaarigen“ und „Das getupfte Band“. Im Anaconda-Band komplett."],
+  "Die Memoiren des Sherlock Holmes":["The Memoirs of Sherlock Holmes",1894,"Erzählungen bis zum Kampf mit Moriarty am Reichenbachfall. Im Anaconda-Band bis auf „Die Pappschachtel“ enthalten."],
+  "Der Hund der Baskervilles":["The Hound of the Baskervilles",1902,"Der berühmteste Roman. Spielt zeitlich vor Holmes’ scheinbarem Tod. Im Anaconda-Band enthalten."],
+  "Die Rückkehr des Sherlock Holmes":["The Return of Sherlock Holmes",1905,"13 Erzählungen nach Holmes’ Rückkehr. Im Anaconda-Band komplett."],
+  "Das Tal der Angst":["The Valley of Fear",1915,"Der letzte Roman, wieder mit Moriarty im Hintergrund."],
+  "Seine Abschiedsvorstellung":["His Last Bow",1917,"8 Erzählungen. Im Anaconda-Band sind nur zwei davon enthalten."],
+  "Sherlock Holmes’ Buch der Fälle":["The Case-Book of Sherlock Holmes",1927,"Die letzten 12 Erzählungen."],
+
+  "Tintenherz":[null,2003],"Tintenblut":[null,2005],"Tintentod":[null,2007],"Die Farbe der Rache":[null,2023],
+  "Herr der Diebe":[null,2000,"Zwei Brüder fliehen nach Venedig und schließen sich einer Kinderbande an."],
+  "Das andere Kind":[null,2009],"Im Tal des Fuchses":[null,2012],
+
+  "Diebe im Olymp":["The Lightning Thief",2005],"Im Bann des Zyklopen":["The Sea of Monsters",2006],
+  "Der Fluch des Titanen":["The Titan's Curse",2007],"Die Schlacht um das Labyrinth":["The Battle of the Labyrinth",2008],
+  "Die letzte Göttin":["The Last Olympian",2009],"Der Kelch der Götter":["The Chalice of the Gods",2023],
+  "Der Zorn der dreifachen Göttin":["Wrath of the Triple Goddess",2024],
+
+  "Die sieben Schwestern":["The Seven Sisters",2014],"Die Sturmschwester":["The Storm Sister",2015],
+  "Die Schattenschwester":["The Shadow Sister",2016],"Die Perlenschwester":["The Pearl Sister",2017],
+  "Die Mondschwester":["The Moon Sister",2018],"Die Sonnenschwester":["The Sun Sister",2019],
+  "Die verschwundene Schwester":["The Missing Sister",2021],"Atlas – Die Geschichte von Pa Salt":["Atlas: The Story of Pa Salt",2023,"Der Abschluss: die Geschichte des Vaters."]
+};
+
+/* Kennzahlen */
+let owned=0, miss={1:0,2:0,3:0,4:0}; const topWishes=[]; const progress=[]; const complete=[];
+const REG=[];
+GROUPS.forEach(g=>g.authors.forEach(a=>a.series.forEach(s=>{
+  s.books.forEach(b=>{
+    b._k = REG.push({a,s,b,sec: g.sect==="sach" ? "sachbuecher" : "unterhaltung"})-1;
+    if(b[2]) owned++; else { const p=pr(b,s); miss[p]++; if(p===1) topWishes.push({k:b._k, t:b[0], a:a.author, s:s.singles?null:s.name, n:b[1]}); }
+  });
+  if(!s.singles){
+    const m = s.books.filter(b=>!b[2]);
+    if(m.length) progress.push({a,s,m}); else complete.push(s.name);
+  }
+})));
+
+document.getElementById("stats").innerHTML = `
+  <div class="stat own"><b>${owned}</b><span>im Regal</span></div>
+  <div class="stat p1"><b>${miss[1]}</b><span>ganz oben</span></div>
+  <div class="stat p2"><b>${miss[2]}</b><span>gern</span></div>
+  <div class="stat p3"><b>${miss[3]}</b><span>irgendwann</span></div>
+  <div class="stat p4"><b>${miss[4]}</b><span>optional</span></div>`;
+
+document.getElementById("topList").innerHTML = topWishes.map(x=>`
+  <li><button type="button" class="lnk tt" data-k="${x.k}">${x.t}</button><span class="meta">${x.a}${x.s ? `, ${x.s}${x.n && x.n!=="+" ? ` ${x.n}` : ""}` : ""}</span></li>`).join("");
+
+progress.sort((x,y)=> x.s.prio - y.s.prio || x.m.length - y.m.length);
+document.getElementById("prog").innerHTML = progress.map(({a,s,m})=>`
+  <a class="prow" href="#${a.id}-${slug(s.name)}">
+    <span class="pname">${s.name}<small>${a.author}</small></span>
+    <span class="track" aria-hidden="true">${s.books.map(b=> b[2] ? `<i class="blk"></i>` : `<i class="blk m${pr(b,s)}"></i>`).join("")}</span>
+    <span class="pcount">${s.books.length-m.length} von ${s.books.length}</span>
+  </a>`).join("");
+document.getElementById("complete").innerHTML = `<b>Vollständig:</b> ${complete.join(", ")}`;
+
+/* Regale */
+const root = document.getElementById("root"), sachRoot = document.getElementById("sachRoot");
+GROUPS.forEach(g=>{
+  const target = g.sect==="sach" ? sachRoot : root;
+  if(g.sect!=="sach"){ const gh = document.createElement("h3"); gh.className="group"; gh.textContent=g.group; target.appendChild(gh); }
+  const gwrap = document.createElement("div"); gwrap.className="gwrap"; target.appendChild(gwrap);
+  g.authors.forEach(a=>{
+    const sec=document.createElement("section"); sec.className="author"; sec.id=a.id;
+    sec.innerHTML=`<h2>${a.author}</h2><p class="genre">${a.genre}</p>`;
+    a.series.forEach(s=>{
+      const m = s.books.filter(b=>!b[2]); const own = s.books.length-m.length;
+      const box=document.createElement("div"); box.className="series filterable"; box.id=`${a.id}-${slug(s.name)}`;
+      box.dataset.missing=m.length;
+      box.dataset.prios=[...new Set(m.map(b=>pr(b,s)))].join(",");
+      box.dataset.text=(a.author+" "+s.name+" "+s.books.map(b=>b[0]).join(" ")).toLowerCase();
+      const countText = s.singles ? (m.length ? `${own} von ${s.books.length}` : `${own} ${own===1?"Buch":"Bücher"}`) : (m.length ? `${own} von ${s.books.length}` : "Vollständig");
+      box.innerHTML=`
+        <div class="series-head"><h4>${s.name}</h4><span class="count ${(!s.singles && !m.length)?"done":""}">${countText}</span></div>
+        ${s.guide?`<button type="button" class="guide-btn" data-guide="${s.guide}">Original und Reihenfolge erklärt</button>`:""}
+        ${s.note?`<p class="note">${s.note}</p>`:""}
+        <div class="shelf-scroll"><div class="shelf"></div></div>`;
+      const shelf=box.querySelector(".shelf");
+      s.books.forEach((b,i)=>{
+        const [t,n,has]=b; const el=document.createElement("button"); el.type="button"; el.dataset.k=b._k;
+        el.className="spine"+(has?"":` m${pr(b,s)}`);
+        el.style.height=spineHeight(t,i)+"px";
+        if(has) el.style.background=spineColor(a.hue,i);
+        const label=(n&&n!=="+"?`Band ${n}: `:"")+t+(has?"":` (fehlt, ${PRIO[pr(b,s)]})`);
+        el.title=label; el.setAttribute("aria-label",label+". Details anzeigen");
+        el.innerHTML=`<span class="no">${n??""}</span><span class="t">${t}</span>`;
+        shelf.appendChild(el);
+      });
+      if(m.length){
+        const w=document.createElement("div"); w.className="wishlist";
+        const sorted=[...m].sort((x,y)=>pr(x,s)-pr(y,s));
+        w.innerHTML=`<strong>Fehlt noch</strong><ul>${sorted.map(b=>`<li><span><button type="button" class="lnk" data-k="${b._k}">${b[0]}</button>${b[1]&&b[1]!=="+"?` <span class="b">(Band ${b[1]})</span>`:""}</span><span class="tag p${pr(b,s)}">${PRIO[pr(b,s)]}</span></li>`).join("")}</ul>`;
+        box.appendChild(w);
+      }
+      sec.appendChild(box);
+    });
+    if(a.ideas && a.ideas.length){
+      const d=document.createElement("div"); d.className="ideas filterable";
+      d.dataset.missing=a.ideas.length;
+      d.dataset.prios=[...new Set(a.ideas.map(x=>x[2]))].join(",");
+      d.dataset.text=(a.author+" "+a.ideas.map(x=>x[0]+" "+x[1]).join(" ")).toLowerCase();
+      d.innerHTML=`<h4>${a.series.length?"Passt auch dazu":"Ideen zum Ausprobieren"}</h4><ul>${a.ideas.map(x=>`<li><span>${x[0]}<span class="why">${x[1]}</span></span><span class="tag p${x[2]}">${PRIO[x[2]]}</span></li>`).join("")}</ul>`;
+      sec.appendChild(d);
+    }
+    gwrap.appendChild(sec);
+  });
+});
+
+/* Suche und Filter: Ergebnisse als Liste */
+const state={q:"",prio:0,only:false};
+const norm = t => String(t||"").toLowerCase().replace(/ß/g,"ss").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+const normAe = t => String(t||"").toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g," ").trim();
+const STOP = new Set(["der","die","das","den","dem","des","ein","eine","einer","eines","und","von","vom","im","in","am","zu","zum","zur","mit","the","of","a","an","and"]);
+function lev(x,y){
+  const m=x.length,n=y.length; if(Math.abs(m-n)>2) return 9;
+  let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ const cur=[i]; for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(x[i-1]===y[j-1]?0:1)); prev=cur; }
+  return prev[n];
+}
+function tokens(q){ const all=norm(q).split(" ").filter(Boolean); const t=all.filter(w=>!STOP.has(w)); return t.length?t:all; }
+function exact(tk,hay){ return tk.every(t=>hay.includes(t)); }
+function fuzzy(tk,hay,words){
+  return tk.every(t => hay.includes(t) || (t.length>=5 && words.some(w => {
+    const lim = t.length>=7 ? 2 : 1;
+    return lev(t,w.slice(0,t.length))<=lim || (w.length>=t.length && lev(t,w)<=2);
+  })));
+}
+/* Stufenweise: erst Treffer in Titel, Autor und Reihe, dann ungenaue Treffer, zuletzt Inhaltsbeschreibungen */
+function search(tk,pool){
+  let r=pool.filter(i=>exact(tk,i.hay)); if(r.length) return r;
+  r=pool.filter(i=>fuzzy(tk,i.hay,i.words)); if(r.length) return r;
+  return pool.filter(i=>exact(tk,i.hay2));
+}
+/* Suchindex: Bücher und Ideen */
+const ITEMS=[];
+REG.forEach((r,k)=>{
+  const {a,s,b,sec}=r; const inf=INFO[b[0]]||[];
+  const txt=[a.author,s.singles?"":s.name,b[0],inf[0]].filter(Boolean).join(" ");
+  const txt2=[a.genre,inf[2],SDESC[s.name]].filter(Boolean).join(" ");
+  ITEMS.push({kind:"book",k,sec,a,s,b,prio:b[2]?0:pr(b,s),owned:!!b[2],hay:norm(txt)+" "+normAe(txt),hay2:norm(txt2)+" "+normAe(txt2)});
+});
+GROUPS.forEach(g=>g.authors.forEach(a=>(a.ideas||[]).forEach(x=>{
+  const txt=[a.author,x[0]].join(" "), txt2=[a.genre,x[1]].join(" ");
+  ITEMS.push({kind:"idea",sec:"ideen",a,x,prio:x[2],owned:false,hay:norm(txt)+" "+normAe(txt),hay2:norm(txt2)+" "+normAe(txt2)});
+})));
+ITEMS.forEach(i=>i.words=[...new Set(i.hay.split(" "))]);
+
+function splitTitle(a,t){ return (a.split && t.includes(": ")) ? t.split(": ") : [a.author,t]; }
+function itemHTML(i){
+  if(i.kind==="idea"){
+    const [au,ti]=splitTitle({split:true},i.x[0]);
+    const by = i.x[0].includes(": ") ? au : i.a.author;
+    return `<li class="ri"><i class="mk idea"></i><span class="rt">${i.x[0].includes(": ")?ti:i.x[0]}</span><span class="tag p${i.prio}">${PRIO[i.prio]}</span><span class="rmeta">${by}. Idee: ${i.x[1]}</span></li>`;
+  }
+  const {a,s,b}=i; const [au,ti]=splitTitle(a,b[0]);
+  const where = s.singles ? (a.split ? a.author : "Einzelband") : `${s.name}${typeof b[1]==="number"?`, Band ${b[1]}`:""}`;
+  const meta = a.split ? (au!==a.author ? `${au}. ${where}` : where) : `${au}. ${where}`;
+  const tag = i.owned ? `<span class="tag own">Im Regal</span>` : `<span class="tag p${i.prio}">${PRIO[i.prio]}</span>`;
+  return `<li class="ri"><i class="mk ${i.owned?"":"m"+i.prio}"></i><button type="button" class="lnk rt" data-goto="${i.k}">${ti}</button>${tag}<span class="rmeta">${meta}</span></li>`;
+}
+function apply(){
+  const active = !!(state.q || state.prio || state.only);
+  document.getElementById("filterDot").classList.toggle("hidden", !(state.prio || state.only));
+  const tk = state.q ? tokens(state.q) : [];
+  const pool = ITEMS.filter(i => (!state.prio || (!i.owned && i.prio===state.prio)) && (!state.only || !i.owned));
+  const hits = active ? (tk.length ? search(tk,pool) : pool) : [];
+  const cnt={unterhaltung:0, sachbuecher:0, ideen:0};
+  hits.forEach(i=>cnt[i.sec]++);
+  document.querySelectorAll(".hc").forEach(h=>{ const n=cnt[h.dataset.hc]; h.textContent = active && n ? n : ""; });
+  document.getElementById("results").classList.toggle("hidden",!active);
+  if(active){
+    const parts=[];
+    if(state.q) parts.push(`„${document.getElementById("q").value.trim()}“`);
+    if(state.prio) parts.push(PRIO[state.prio]);
+    if(state.only) parts.push("nur Fehlendes");
+    const books=cnt.unterhaltung+cnt.sachbuecher;
+    document.getElementById("resText").textContent = hits.length
+      ? `${books} ${books===1?"Buch":"Bücher"}${cnt.ideen?` und ${cnt.ideen} ${cnt.ideen===1?"Idee":"Ideen"}`:""} für ${parts.join(", ")}`
+      : `Nichts gefunden für ${parts.join(", ")}. Versuch einen anderen Begriff.`;
+    const sections=[["unterhaltung","Unterhaltung"],["sachbuecher","Sachbücher"],["ideen","Ideen und Vorschläge"]];
+    document.getElementById("resList").innerHTML = sections.map(([key,label])=>{
+      const list=hits.filter(i=>i.sec===key); if(!list.length) return "";
+      return `<div class="resgroup"><h3>${label} <span class="count">${list.length}</span></h3><ul class="reslist">${list.map(itemHTML).join("")}</ul></div>`;
+    }).join("");
+  }
+  showView();
+}
+document.getElementById("q").addEventListener("input",e=>{state.q=e.target.value.trim(); apply();});
+document.querySelectorAll(".chip[data-prio]").forEach(c=>c.addEventListener("click",()=>{
+  state.prio=+c.dataset.prio;
+  document.querySelectorAll(".chip[data-prio]").forEach(x=>x.setAttribute("aria-pressed",x===c));
+  apply();
+}));
+/* Infofenster */
+const dlg=document.getElementById("info");
+function openInfo(k){
+  const {a,s,b}=REG[k]; const [t,n,has]=b; const inf=INFO[t]||[]; const p=pr(b,s);
+  let title=t, author=a.author;
+  if(a.split && t.includes(": ")){ [author,title]=t.split(": "); }
+  const bands=s.books.filter(x=>typeof x[1]==="number").length;
+  let pos="";
+  if(s.singles) pos = a.split ? a.author : "Einzelband";
+  else if(typeof n==="number") pos=`${s.name}, Band ${n} von ${bands}`;
+  else pos=`${s.name}, ${n==="+"?"Ergänzungsband":"Vorgeschichte"}`;
+  document.getElementById("infoSer").textContent=pos;
+  document.getElementById("infoTitle").textContent=title;
+  document.getElementById("infoBy").textContent=author;
+  const desc=inf[2] || SDESC[s.name] || "";
+  const d=document.getElementById("infoDesc"); d.textContent=desc; d.classList.toggle("hidden",!desc);
+  const o=document.getElementById("infoOrig");
+  o.textContent = inf[0] ? `Originaltitel: ${inf[0]}${inf[1]?`, ${inf[1]}`:""}` : (inf[1] ? `Erschienen ${inf[1]}` : "");
+  o.classList.toggle("hidden",!o.textContent);
+  const st=document.getElementById("infoStatus");
+  st.className="status "+(has?"own":"p"+p);
+  st.textContent = has ? "Steht im Regal" : `Fehlt noch, Priorität: ${PRIO[p]}`;
+  dlg.showModal();
+}
+const GUIDES = {
+  sherlock: { title:"Sherlock Holmes: Was ist Original?", html:`
+    <p>Das Original, der sogenannte Kanon, umfasst alles, was Arthur Conan Doyle selbst geschrieben hat: <b>4 Romane und 5 Erzählbände</b> mit zusammen 56 Kurzgeschichten.</p>
+    <p>Alles andere ist nicht original. Dazu zählen Bücher anderer Autoren mit Sherlock Holmes (sogenannte Pastiches, auch wenn sie offiziell lizenziert sind) sowie Filme und Serien wie „Sherlock“ oder „Enola Holmes“.</p>
+    <h4>Reihenfolge nach Erscheinen</h4>
+    <ol>
+      <li>Eine Studie in Scharlachrot <span class="k">Roman, 1887. Watson lernt Holmes kennen.</span> <span class="miss">fehlt</span></li>
+      <li>Das Zeichen der Vier <span class="k">Roman, 1890</span> <span class="miss">fehlt</span></li>
+      <li>Die Abenteuer des Sherlock Holmes <span class="k">12 Geschichten, 1892</span> <span class="own">vorhanden</span></li>
+      <li>Die Memoiren des Sherlock Holmes <span class="k">11–12 Geschichten, 1894. Endet mit Holmes’ scheinbarem Tod am Reichenbachfall.</span> <span class="own">vorhanden</span></li>
+      <li>Der Hund der Baskervilles <span class="k">Roman, 1902. Spielt zeitlich vor seinem „Tod“.</span> <span class="own">vorhanden</span></li>
+      <li>Die Rückkehr des Sherlock Holmes <span class="k">13 Geschichten, 1905</span> <span class="own">vorhanden</span></li>
+      <li>Das Tal der Angst <span class="k">Roman, 1915</span> <span class="miss">fehlt</span></li>
+      <li>Seine Abschiedsvorstellung <span class="k">8 Geschichten, 1917</span> <span class="miss">nur 2 von 8</span></li>
+      <li>Sherlock Holmes’ Buch der Fälle <span class="k">12 Geschichten, 1927</span> <span class="miss">fehlt</span></li>
+    </ol>
+    <h4>Was im Anaconda-Band steckt</h4>
+    <p>Band 3, 4, 5 und 6 sind komplett enthalten. Nur „Die Pappschachtel“ aus Band 4 fehlt, weil viele Ausgaben sie erst in Band 8 bringen. Dazu kommen zwei Geschichten aus Band 8: „Die gestohlenen Unterseebootszeichnungen“ und „Der sterbende Sherlock Holmes“.</p>
+    <h4>Tipp zum Verschenken</h4>
+    <p>Am einfachsten ist eine Ausgabe der Romane, die die drei fehlenden Romane enthält, oder eine Gesamtausgabe der Erzählungen für Band 8 und 9.</p>`}
+};
+const gdlg=document.getElementById("guide");
+function openGuide(id){
+  const g=GUIDES[id]; if(!g) return;
+  document.getElementById("guideTitle").textContent=g.title;
+  document.getElementById("guideBody").innerHTML=g.html;
+  gdlg.showModal();
+}
+document.getElementById("guideClose").addEventListener("click",()=>gdlg.close());
+gdlg.addEventListener("click",e=>{ if(e.target===gdlg) gdlg.close(); });
+
+/* Aus der Trefferliste zum Regal springen */
+let lastSearch=null;
+const backBtn=document.getElementById("backBtn");
+function gotoShelf(k){
+  lastSearch={q:state.q, prio:state.prio, only:state.only};
+  resetAll();
+  view=REG[k].sec; showView();
+  const el=document.querySelector(`button.spine[data-k="${k}"]`);
+  if(el){
+    el.scrollIntoView({block:"center", inline:"center"});
+    el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+    setTimeout(()=>el.classList.remove("flash"),4000);
+  }
+  backBtn.classList.remove("hidden");
+}
+backBtn.addEventListener("click",()=>{
+  if(!lastSearch) return;
+  state.q=lastSearch.q; state.prio=lastSearch.prio; state.only=lastSearch.only;
+  document.getElementById("q").value=lastSearch.q;
+  document.querySelectorAll(".chip[data-prio]").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.prio===state.prio));
+  document.getElementById("onlyMissing").setAttribute("aria-pressed",state.only);
+  backBtn.classList.add("hidden"); lastSearch=null;
+  apply(); window.scrollTo({top:0});
+});
+document.getElementById("q").addEventListener("input",()=>backBtn.classList.add("hidden"));
+document.querySelectorAll(".tabs a").forEach(t=>t.addEventListener("click",()=>backBtn.classList.add("hidden")));
+
+document.addEventListener("click",e=>{
+  const go=e.target.closest("[data-goto]"); if(go){ gotoShelf(+go.dataset.goto); return; }
+  const g=e.target.closest("[data-guide]"); if(g){ openGuide(g.dataset.guide); return; }
+  const t=e.target.closest("[data-k]"); if(t) openInfo(+t.dataset.k);
+});
+document.getElementById("infoClose").addEventListener("click",()=>dlg.close());
+dlg.addEventListener("click",e=>{ if(e.target===dlg) dlg.close(); });
+
+/* Navigation: drei Reiter, Suche zeigt immer alle Bereiche */
+const nav=document.getElementById("topnav"), ft=document.getElementById("filterToggle"), fp=document.getElementById("filters");
+const VIEWS=["ueberblick","unterhaltung","sachbuecher"];
+let view="ueberblick";
+function setPad(){ document.documentElement.style.scrollPaddingTop = (nav.offsetHeight + 12) + "px"; }
+function isActive(){ return !!(state.q || state.prio || state.only); }
+function showView(){
+  const act=isActive();
+  document.querySelectorAll(".part").forEach(p=>{
+    const on = !act && p.id===view;
+    p.classList.toggle("on",on);
+  });
+  document.querySelectorAll(".tabs a").forEach(t=>t.classList.toggle("active", !act && t.dataset.sec===view));
+  setPad();
+}
+function route(){
+  const h=decodeURIComponent(location.hash.slice(1));
+  if(VIEWS.includes(h)){ view=h; showView(); window.scrollTo({top:0}); return; }
+  const el=h && document.getElementById(h);
+  if(el){ const part=el.closest(".part"); if(part){ view=part.id; showView(); el.scrollIntoView(); } return; }
+  view="ueberblick"; showView();
+}
+window.addEventListener("hashchange",route);
+window.addEventListener("resize",setPad);
+document.querySelectorAll(".tabs a").forEach(t=>t.addEventListener("click",e=>{
+  if(isActive()){ resetAll(); }
+  if(location.hash===`#${t.dataset.sec}`){ e.preventDefault(); view=t.dataset.sec; showView(); window.scrollTo({top:0}); }
+}));
+ft.addEventListener("click",()=>{
+  const open = ft.getAttribute("aria-expanded")!=="true";
+  ft.setAttribute("aria-expanded",open); fp.classList.toggle("hidden",!open); setPad();
+});
+function resetAll(){
+  state.q=""; state.prio=0; state.only=false;
+  document.getElementById("q").value="";
+  document.querySelectorAll(".chip[data-prio]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.prio==="0"));
+  document.getElementById("onlyMissing").setAttribute("aria-pressed","false");
+  apply();
+}
+document.getElementById("resClear").addEventListener("click",resetAll);
+let wasActive=false;
+document.getElementById("q").addEventListener("input",()=>{
+  const act=isActive();
+  if(act && !wasActive){ const top=nav.getBoundingClientRect().top+window.scrollY; if(window.scrollY>top) window.scrollTo({top}); }
+  wasActive=act;
+});
+route();
+
+const om=document.getElementById("onlyMissing");
+om.addEventListener("click",()=>{state.only=!state.only; om.setAttribute("aria-pressed",state.only); apply();});
+</script>
+</body>
+</html>
